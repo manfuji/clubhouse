@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.conf import settings
 # Create your models here.
 # \products of the club
@@ -7,21 +6,26 @@ from django.conf import settings
 # not added the votes mode, in a different way but with a different method
 
 
-class MemberVote(models.Model):
-    vote_product_id = models.CharField(max_length=100, unique=True)
-    vote_count = models.CharField(max_length=10, unique=True)
-
-
 class Product(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
-    members_poll = models.ForeignKey(MemberVote, on_delete=models.CASCADE)
+    vote_count = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=100, decimal_places=2)
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True, auto_created=False)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class MemberVote(models.Model):
+    vote_product = models.ForeignKey(
+        Product, on_delete=models.SET_NULL, null=True)
+    voter = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
 
 
 # club creation
@@ -37,3 +41,6 @@ class ClubGroup(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     group_master = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+
+    def __str__(self) -> str:
+        return self.name

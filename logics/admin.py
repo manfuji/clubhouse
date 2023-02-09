@@ -5,8 +5,8 @@ from .models import *
 
 @admin.register(MemberVote)
 class MemberVoteAdmin(admin.ModelAdmin):
-    list_display_list = ("vote_product_id",)
-    list_display = ("vote_count", "vote_product_id")
+    list_display_list = ("vote_product",)
+    list_display = ("voter", "vote_product")
 
 
 @admin.register(Product)
