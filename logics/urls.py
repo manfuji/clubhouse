@@ -8,6 +8,8 @@ urlpatterns = [
     path("group/", GroupApi.as_view(), name="group"),
     path("groupitem/<int:pk>", GetGroupDetails.as_view(), name="group_item"),
     path("allgroups/", GetUserGroup.as_view(), name="groups"),
+    path("addmember/", AddMemberToGroup.as_view(), name="addmember"),
+
 
 
 
