@@ -9,7 +9,7 @@ User = get_user_model()
 class ProductSerializer(ModelSerializer):
     class Meta:
         model = Product
-        fields = ("name", "description", "price")
+        fields = ("name", "description", "price", "product_mage")
 
 
 class ProductDetailSerializer(ModelSerializer):
@@ -21,14 +21,14 @@ class ProductDetailSerializer(ModelSerializer):
 class GroupSerializer(ModelSerializer):
     class Meta:
         model = ClubGroup
-        fields = ("name", "description")
+        fields = ("name", "description", "subscription", "club_image")
 
 
 class GroupDetailSerializer(ModelSerializer):
     class Meta:
         depth = 1
         model = ClubGroup
-        fields = "__all__"
+        exclude = ['members']
 
 
 class MemberVoteSerializer(ModelSerializer):
@@ -47,3 +47,9 @@ class UserSerializer(ModelSerializer):
     class Meta:
         model = User
         fields = ("email", "id", "name", "is_active", "is_staff")
+
+
+class ClubhouseMemberSerializer(ModelSerializer):
+    class Meta:
+        model = ClubhouseMember
+        fields = "__all__"

@@ -18,13 +18,15 @@ from django.urls import path, include, re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.conf.urls.static import static
+from django.conf import settings
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Djoser API",
+        title="Assignment cloud computing",
         default_version="v1",
-        description="REST implementation of Django authentication system. djoser library provides a set of Django Rest Framework views to handle basic actions such as registration, login, logout, password reset and account activation. It works with custom user model.",
-        contact=openapi.Contact(email="contact@snippets.local"),
+        description="REST implementation of Django clubhouse system with docker and apache in mind",
+        contact=openapi.Contact(email="group-work@snippets.local"),
         license=openapi.License(name="BSD License"),
     ),
     public=True,
@@ -35,10 +37,10 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
-    re_path(
-        r"^api/v1/docs/$",
+    path(
+        "",
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
     path('api/', include("logics.urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
