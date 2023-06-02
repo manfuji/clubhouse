@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "accounts", "djoser", 'rest_framework', "logics", "drf_yasg",  "corsheaders",
+    "accounts", "djoser", 'rest_framework', "logics", "drf_yasg",  "corsheaders", "payment"
 
 ]
 
@@ -197,3 +197,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 
 AUTH_USER_MODEL = "accounts.AccountUser"
+
+
+# settings.py
+
+PAYSTACK_PUBLIC_KEY = 'your_paystack_public_key'
+PAYSTACK_SECRET_KEY = 'your_paystack_secret_key'

@@ -43,4 +43,5 @@ urlpatterns = [
         name="schema-swagger-ui",
     ),
     path('api/', include("logics.urls")),
+    path('bills/api', include("payment.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

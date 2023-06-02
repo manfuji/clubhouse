@@ -15,6 +15,8 @@ from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 from .util_send_mail import send_email
 from datetime import datetime, timedelta
+import requests
+
 User = get_user_model()
 
 # Create your views here.
@@ -75,7 +77,10 @@ class ProductApi(generics.GenericAPIView):
             data = request.data
 
             group_id = data['group_id']
-            group = ClubGroup.objects.get(id=group_id)
+            # group = ClubGroup.objects.get(id=group_id)
+            group = self.get_group(self, group_id)
+
+            self.very_group_master(self, group, user)
             if group.group_master == user:
                 serializer = ProductSerializer(product, data=request.data)
                 if serializer.is_valid():
@@ -89,6 +94,17 @@ class ProductApi(generics.GenericAPIView):
             return Response({"message": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"message": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def very_group_master(self, group, user):
+        if group.group_master != user:
+            return Response({"message": "You are not authorized to update this product"}, status=status.HTTP_403_FORBIDDEN)
+
+    def get_group(self, group_id):
+        try:
+            return ClubGroup.objects.get(id=group_id)
+        except ClubGroup.DoesNotExist:
+            return Response({"message": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
 # products
 
 
