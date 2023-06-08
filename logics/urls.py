@@ -16,4 +16,5 @@ urlpatterns = [
     # path('groups/', GroupApi.as_view()),
     path('groups/remove-member/', RemoveMemberFromGroup.as_view()),
     path('groups/activate-member/', ActivateMember.as_view()),
+    path('group/member/request', RequestToJoinGroupView.as_view()),
 ]

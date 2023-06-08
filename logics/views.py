@@ -307,80 +307,6 @@ class GetAllGroups(generics.GenericAPIView):
             return Response({"message": f"something went wrong {e}"})
 
 
-# class AddMemberToGroup(generics.GenericAPIView):
-#     queryset = ClubGroup.objects.all()
-#     serializer_class = GroupSerializer
-#     permission_classes = (IsAuthenticated,)
-#     authentication_classes = (JWTAuthentication,)
-
-#     def post(self, request, *args, **kwargs):
-#         message = {"message": "Please check your data and try again"}
-#         try:
-
-#             user = request.user
-#             data = request.data
-#             get_user_detail = User.objects.get(email=user)
-#             get_new_user = User.objects.get(email=data['new_member'])
-
-#             group = ClubGroup.objects.get(id=data['group_id'])
-#             verify_user = group.group_master
-
-#             if verify_user == user:
-#                 new_user = group.members.add(get_new_user)
-#                 send_email
-#                 print(new_user)
-#                 subject = "Welcome message"
-#                 message = {f"Welcome {new_user} to {group.name}"}
-#                 send_email(subject, message, [new_user])
-#                 return Response({f"Welcome {new_user} to {group.name}"})
-#         except Exception as e:
-#             return Response({"message": f"Failed to add new member {e}"})
-
-#         # return Response(message)
-# class AddMemberToGroup(generics.GenericAPIView):
-#     queryset = ClubGroup.objects.all()
-#     serializer_class = GroupSerializer
-#     permission_classes = (IsAuthenticated,)
-#     authentication_classes = (JWTAuthentication,)
-
-#     def post(self, request, *args, **kwargs):
-#         try:
-#             user = request.user
-#             data = request.data
-
-#             subscription_type = data['subscription_type']
-
-#             group = ClubGroup.objects.get(id=data['group_id'])
-#             verify_user = group.group_master
-
-#             if verify_user != user:
-#                 return Response({"message": "You don't have permission to add members to this group."})
-
-#             new_member_email = data['new_member']
-#             new_member = User.objects.get(email=new_member_email)
-
-#             # Assuming the current date is the start of the subscription
-#             current_date = datetime.now().date()
-#             # Calculate the expiration date by adding one month (30 days)
-#             expiration_date = current_date + timedelta(days=30)
-#             ClubhouseMember.objects.create(user=new_member,club=group,subscription_type=subscription_type,subscription_expiration_date=expiration_date)
-#             group.members.add(new_member)
-
-#             subject = "Welcome message"
-#             message = f"Welcome {new_member} to {group.name}"
-#             send_email(subject, message,
-#                        recipient_list=[new_member_email])
-
-#             return Response({"message": f"Successfully added {new_member} to {group.name}"})
-
-#         except User.DoesNotExist:
-#             return Response({"message": "Invalid user email."})
-
-#         except ClubGroup.DoesNotExist:
-#             return Response({"message": "Invalid group ID."})
-
-#         except Exception as e:
-#             return Response({"message": f"Failed to add new member: {str(e)}"})
 class AddMemberToGroup(generics.GenericAPIView):
     queryset = ClubGroup.objects.all()
     serializer_class = GroupSerializer
@@ -537,3 +463,80 @@ class VotingProduct(generics.GenericAPIView):
             return Response({"msg": "vote casted"})
         else:
             return Response({"message": "something went wrong or you don't have permission to access this group"})
+
+
+class RequestToJoinGroupView(generics.GenericAPIView):
+    queryset = RequestToJoinGroup.objects.all()
+    serializer_class = RequestToJoinGroupSerializer
+    permission_classes = (IsAuthenticated,)
+    authentication_classes = (JWTAuthentication,)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        data = request.data
+        if not user and data:
+            return Response({"message": "You are not logged in or the all the fields are requested."})
+        try:
+            group = ClubGroup.objects.filter(id=data['id'])
+
+            if not group:
+                return Response({"message": "Invalid group ID"})
+
+            self.check_group_master(group, user)
+            data = RequestToJoinGroup.objects.filter(club_group=group)
+            serilaized_data = RequestToJoinGroupSerializer(data).data
+            return Response({"requests": serilaized_data})
+        except Exception as e:
+            return Response({"message": f"something went wrong {e}"})
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        group_id = data['group_id']
+        new_member_email = data['new_member']
+
+        if not group_id:
+            return Response({"message": "Group ID is required."})
+        if not new_member_email:
+            return Response({"message": "New member email is required."})
+
+        try:
+            group = ClubGroup.objects.get(id=group_id)
+            verify_user = User.objects.get(email=new_member_email)
+            if not verify_user or not group:
+                return Response({"message": "Invalid group ID or user email."})
+            savedData = RequestToJoinGroup.objects.create(
+                user=verify_user, club_group=group)
+            subject = "Tiwdo message for joining a group"
+            message = f"Your request to join {group} is pending we will let you know when your request is approved"
+            recipient = [new_member_email]
+            send_email(subject, message, recipient_list=recipient)
+            return Response({"message": f"Successfully added {new_member_email} to {group.name} but pending."})
+
+        except Exception as e:
+            return Response({"message": f"Invalid data {e}."})
+
+    def put(self, request, *args, **kwargs):
+        request_id = kwargs.get('id')
+        data = request.data
+
+        try:
+            request_instance = RequestToJoinGroup.objects.get(id=request_id)
+
+            serializer = RequestToJoinGroupSerializer(
+                request_instance, data=data, partial=True)
+            if serializer.is_valid():
+                updated_request = serializer.save()
+                return Response(RequestToJoinGroupSerializer(updated_request).data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except RequestToJoinGroup.DoesNotExist:
+            return Response({"message": "Request not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        except Exception as e:
+            return Response({"message": f"Something went wrong: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def check_group_master(self, group, user):
+        if group.group_master != user:
+            return Response({"message": "You are not authorized to delete this product"}, status=status.HTTP_403_FORBIDDEN)

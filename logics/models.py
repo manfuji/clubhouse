@@ -8,6 +8,14 @@ from django.utils.translation import gettext_lazy as _
 # not added the votes mode, in a different way but with a different method
 
 
+class ProductCategory(models.Model):
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True, auto_created=False)
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
     # defining the location of the file
     def upload_location(instance, filename):
@@ -22,8 +30,11 @@ class Product(models.Model):
     vote_count = models.PositiveIntegerField(default=0)
     price = models.DecimalField(max_digits=65, decimal_places=2)
     is_completed = models.BooleanField(default=False)
+    products_category = models.ForeignKey(
+        ProductCategory, related_name="product_category", on_delete=models.CASCADE, default=1)
     created_at = models.DateTimeField(auto_now_add=True, auto_created=False)
     updated_at = models.DateTimeField(auto_now=True)
+    active = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         return self.name
@@ -79,23 +90,29 @@ class RequestToJoinGroup(models.Model):
         max_length=100, choices=STATUS_CHOICES, default="PENDING")
 
 
-class ClubhouseMember(models.Model):
-    SUBSCRIPTION_CHOICES = (
-        ('FREE', 'Free'),
-        ('BASIC', 'Basic'),
-        ('PREMIUM', 'Premium'),
-    )
-
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    club = models.ForeignKey(ClubGroup, on_delete=models.CASCADE)
-    subscription_type = models.CharField(
-        max_length=10, choices=SUBSCRIPTION_CHOICES)
-    subscription_expiration_date = models.DateField()
-    active = models.BooleanField(default=False)
+class ClubhouseMembership(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=1000, decimal_places=2)
+    subscription_duration = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True, auto_created=False)
+    clubhouse = models.ForeignKey(
+        ClubGroup, related_name="club_membership", on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.user.username
+        return self.name
+
+
+class ClubhouseMember(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
+    club = models.ForeignKey(ClubGroup, on_delete=models.DO_NOTHING)
+    subscription_type = models.ForeignKey(
+        ClubhouseMembership, related_name="membership", on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.user.name
 
 
 # how to check this for a particular club and also check it its pass a week since then subscription ends then turn activative to in active

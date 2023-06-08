@@ -53,3 +53,9 @@ class ClubhouseMemberSerializer(ModelSerializer):
     class Meta:
         model = ClubhouseMember
         fields = "__all__"
+
+
+class RequestToJoinGroupSerializer(ModelSerializer):
+    class Meta:
+        model = RequestToJoinGroup
+        fields = '__all__'
